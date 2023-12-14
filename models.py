@@ -97,6 +97,3 @@ customer_2 = Customer(first_name="Jane", last_name="Smith")
 
 session.add_all([restaurant_1, restaurant_2, customer_1, customer_2])
 session.commit()
-
-print(restaurant_1.reviews())
-print(restaurant_1.get_customers())
