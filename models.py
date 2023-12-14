@@ -86,3 +86,17 @@ class Review(Base):
 
     def full_review(self):
         return f"Review for {self.restaurant.name} by {self.customer.full_name()}: {self.star_rating} stars."
+
+
+# TESTS
+
+restaurant_1 = Restaurant(name="Kwa Mathe", price=3)
+restaurant_2 = Restaurant(name="Kempinski", price=4)
+customer_1 = Customer(first_name="Sultan", last_name="Mondoi")
+customer_2 = Customer(first_name="Jane", last_name="Smith")
+
+session.add_all([restaurant_1, restaurant_2, customer_1, customer_2])
+session.commit()
+
+print(restaurant_1.reviews())
+print(restaurant_1.get_customers())
