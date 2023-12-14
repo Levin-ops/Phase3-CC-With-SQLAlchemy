@@ -9,6 +9,8 @@ engine = create_engine('sqlite:///restaurant.db')
 Session = sessionmaker(bind=engine)
 session = Session()
 
+Base.metadata.create_all(engine)
+
 
 class Restaurant(Base):
     __tablename__ = 'restaurants'
@@ -17,6 +19,20 @@ class Restaurant(Base):
     price = Column(Integer)
     reviews = relationship('Review', back_populates='restaurant')
 
+    def get_reviews(self):
+        return self.reviews
+
+    def get_customers(self):
+        return [review.customer for review in self.reviews]
+
+    @classmethod
+    def fanciest(cls):
+        return session.query(cls).order_by(cls.price.desc()).first()
+
+    def all_reviews(self):
+        return [f"Review for {self.name} by {review.customer.full_name()}: {review.star_rating} stars."
+                for review in self.reviews]
+
 
 class Customer(Base):
     __tablename__ = 'customers'
@@ -24,6 +40,33 @@ class Customer(Base):
     first_name = Column(String)
     last_name = Column(String)
     reviews = relationship('Review', back_populates='customer')
+
+    def get_reviews(self):
+        return self.reviews
+
+    def get_restaurants(self):
+        return [review.restaurant for review in self.reviews]
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    def favorite_restaurant(self):
+        max_rating = max([review.star_rating for review in self.reviews])
+        favorite_reviews = [review for review in self.reviews if review.star_rating == max_rating]
+        return favorite_reviews[0].restaurant if favorite_reviews else None
+
+    def add_review(self, restaurant, rating):
+        new_review = Review(restaurant=restaurant, customer=self, star_rating=rating)
+        session.add(new_review)
+        session.commit()
+
+    def delete_reviews(self, restaurant):
+        reviews_to_delete = [review for review in self.reviews if review.restaurant == restaurant]
+        for review in reviews_to_delete:
+            session.delete(review)
+        session.commit()
+
+
 
 
 class Review(Base):
@@ -34,3 +77,12 @@ class Review(Base):
     star_rating = Column(Integer)
     restaurant = relationship('Restaurant', back_populates='reviews')
     customer = relationship('Customer', back_populates='reviews')
+
+    def customer(self):
+        return self.customer
+
+    def restaurant(self):
+        return self.restaurant
+
+    def full_review(self):
+        return f"Review for {self.restaurant.name} by {self.customer.full_name()}: {self.star_rating} stars."
